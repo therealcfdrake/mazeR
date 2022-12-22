@@ -1,0 +1,22 @@
+Package: mazeR
+Type: Package
+Title: A pakage to generate mazes!
+Version: 0.1.0
+Author: Corie Drake
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: This package generates simple mazes using a randomized depth-first algorithm
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.1
+Imports: 
+    tidyr,
+    ggplot2,
+    stringr,
+    magrittr,
+    dplyr,
+    lemon
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
