@@ -101,7 +101,7 @@ generate_maze <-
   # load mask
   if(!is.null(mask_dir)){
     tmp_bmp <-
-      read.bmp(here::here(mask_dir))
+      read.bmp(mask_dir)
 
     bw_mask <-
       round(0^sqrt(
