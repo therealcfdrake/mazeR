@@ -22,7 +22,7 @@ set.seed(666)
 
 The mazeR package is based on the [randomized depth-first search](https://en.wikipedia.org/wiki/Maze_generation_algorithm) maze generation algorithm.
 
-A Maze object can be created by calling the `generate_maze` function. The Maze can then be displyed using the `render_maze` function.  
+A Maze object can be created by calling the `generate_maze` function. The Maze can then be displayed using the `render_maze` function.  
 
 ```{r}
 maze_a <- generate_maze(25, 25)
@@ -63,7 +63,7 @@ maze_e <- generate_maze(25, 25, j_weight = 5)
 render_maze(maze_e)
 ```
 
-The `curl*` arguments can also be used to influence the path through the space. `curl` represents an angle between the path parallel to the most recent direction of travel and a vector of length `curl_weight`, indicating the direction and magnitude of the curl effect. The parallel components of this vector are then to each "potential next direction" vector, resulting in revised movement probabilities. Positive curl corresponds to a tendency for clockwise rotation.
+The `curl*` arguments can also be used to influence the path through the space. `curl` represents an angle between the path parallel to the most recent direction of travel and a vector of length `curl_weight`, indicating the direction and magnitude of the curl effect. The parallel components of this vector are then added to each "potential next direction" vector, resulting in revised movement probabilities. Positive curl corresponds to a tendency toward clockwise rotation.
 
 ```{r echo=FALSE}
 

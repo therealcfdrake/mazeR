@@ -7,7 +7,8 @@ setClass(
     height = "numeric",
     array = "array",
     exit = "vector",
-    solution = "list"
+    solution = "list",
+    tile = "character"
   ),
   prototype = list(
     width = NA_real_,
@@ -15,7 +16,8 @@ setClass(
     height = NA_real_,
     array = array(),
     exit = c(NA_real_, NA_real_, NA_real_),
-    solution = NULL
+    solution = NULL,
+    tile = "square"
   )
 )
 
@@ -31,6 +33,24 @@ lappend <-
     lst <- c(lst, list(...))
   return(lst)
 }
+
+is.odd <- function(x){
+  x %% 2 == 1
+}
+
+is.even <- function(x){
+  x %% 2 == 0
+}
+
+curler2 <-
+  function(base_weights, curl, curl_weight){
+    n_dir <- length(base_weights)
+    pmax(base_weights + 
+           cos(curl * pi - seq(-pi, pi, length.out = n_dir + 2)[-c(1, n_dir + 2)]) * 
+           curl_weight * 
+           !equals(base_weights, 0L),
+         0 + 1e-6 * !equals(base_weights, 0L))
+  }
 
 #' Generate Maze Object
 #'
@@ -77,18 +97,6 @@ generate_maze <-
            mask_dir = NULL,
            seed = NULL, ...){
 
-  # function to implement curl (rotational bias)
-  curler <-
-    function(base_weights, curl, curl_weight){
-      base_weights +
-        pmax(
-          c(cos(curl * pi / 2) * curl_weight,
-            sin(curl * pi / 2) * curl_weight,
-            sin(-curl * pi / 2) * curl_weight
-            ) * !equals(base_weights, 0L),
-          0)
-    }
-
   # function to check whether bmp mask allows move
   move_allowed <-
     function(bw_mask, i, j, direction){
@@ -129,7 +137,7 @@ generate_maze <-
             rep(0L, n_cells)),
           dim = c(w_maze, l_maze, h_maze, 4))
   available_set <- c(1L, 2L, 3L, 4L, 5L, 6L)
-  apply_curl <- FALSE
+  apply_curl <- !equals(curl_weight, 0)
   last_dir <- 0L
   path <- list()
   i <- 1
@@ -179,20 +187,20 @@ generate_maze <-
       if(j > 1L)    {if(maze_array[i, j - 1, k, 4] != 1L && move_allowed(bw_mask, i, j, 5)){move_probs[5] <- j_weight}}
       if(k > 1L)    {if(maze_array[i, j, k - 1, 4] != 1L){move_probs[4] <- k_weight}}
 
-      if(!apply_curl){apply_curl <-  rbinom(1, 1, curl_prob) == 1}
+      # if(!apply_curl){apply_curl <-  rbinom(1, 1, curl_prob) == 1}
 
-      if(apply_curl){
+      if(apply_curl && rbinom(1, 1, curl_prob) == 1){
         if(last_dir == 1L){
-          move_probs[c(1, 2, 5)] <- curler(move_probs[c(1, 2, 5)], curl, curl_weight)
+          move_probs[c(5, 1, 2)] <- curler2(move_probs[c(5, 1, 2)], curl, curl_weight)
         }
         if(last_dir == 2L){
-          move_probs[c(2, 6, 1)] <- curler(move_probs[c(2, 6, 1)], curl, curl_weight)
+          move_probs[c(1, 2, 6)] <- curler2(move_probs[c(1, 2, 6)], curl, curl_weight)
         }
         if(last_dir == 6L){
-          move_probs[c(6, 5, 2)] <- curler(move_probs[c(6, 5, 2)], curl, curl_weight)
+          move_probs[c(2, 6, 5)] <- curler2(move_probs[c(2, 6, 5)], curl, curl_weight)
         }
         if(last_dir == 5L){
-          move_probs[c(5, 1, 6)] <- curler(move_probs[c(5, 1, 6)], curl, curl_weight)
+          move_probs[c(6, 5, 1)] <- curler2(move_probs[c(6, 5, 1)], curl, curl_weight)
         }
       }
 
@@ -200,7 +208,7 @@ generate_maze <-
       if(sum(move_probs) == 0L){
         path <- head(path, -1)
         tmp <- tail(path, 1)[[1]]
-        apply_curl <- FALSE
+        # apply_curl <- FALSE
         last_dir <- 0L
         i <- tmp[1]
         j <- tmp[2]
@@ -244,7 +252,8 @@ generate_maze <-
       height = h_maze,
       array = maze_array,
       exit = exit,
-      solution = solution)
+      solution = solution,
+      tile = "square")
 }
 
 #' Render a Maze object
@@ -285,7 +294,6 @@ render_maze <-
              dimnames = list(NULL, c("y", "x", "z"))
              ) %>%
       data.frame() %>%
-      # mutate(id = cumsum(c(0, as.numeric(diff(.$z)) != 0)))
       mutate(id = row_number())
   }
 
@@ -398,22 +406,23 @@ render_maze <-
         plot_out <-
           plotdata_walls %>%
           ggplot(aes(x = x, y = y)) +
-          geom_path(aes(group = id), lineend = "round", linejoin = "round") +
-          geom_path(data = plotdata_solution, aes(group = id, color = factor(id, levels = 0:n_sol_path, ordered = TRUE)), size = 1, lineend = "round", linejoin = "round") +
-          scale_color_manual(values = colorRampPalette(c("goldenrod1", "springgreen4", "purple4"))(n_sol_path)) +
-          geom_point(data = plotdata_points, aes(shape = d, fill = d), color = "black", alpha = 0.5) +
-          scale_shape_manual(values = c("u" = 24, "d" = 25, "none" = 21)) +
-          scale_fill_manual(values = c("u" = "deepskyblue", "d" = "deeppink", "none" = "green")) +
+          # geom_path(aes(group = id), lineend = "round", linejoin = "round") +
+          geom_path(aes(group = id), lineend = "round", size = 0) +
+          geom_path(data = plotdata_solution, aes(group = id, color = factor(id, levels = 0:n_sol_path, ordered = TRUE)), size = 1, lineend = "round", linejoin = "round") +###
+          scale_color_manual(values = colorRampPalette(c("goldenrod1", "springgreen4", "purple4"))(n_sol_path)) + ###
+          geom_point(data = plotdata_points, aes(shape = d, fill = d), color = "black", alpha = 0.5) + ###
+          scale_shape_manual(values = c("u" = 24, "d" = 25, "none" = 21)) + ###
+          scale_fill_manual(values = c("u" = "deepskyblue", "d" = "deeppink", "none" = "green")) + ###
           scale_x_continuous(breaks = 1:l_maze) +
           scale_y_continuous(breaks = 1:w_maze) +
           coord_equal() +
-          facet_rep_wrap(paste("Level", str_pad(z, width = nchar(h_maze), side = "left", pad = "0")) ~ ., repeat.tick.labels = TRUE) +
+          facet_rep_wrap(paste("Level", str_pad(z, width = nchar(h_maze), side = "left", pad = "0")) ~ ., repeat.tick.labels = TRUE) + ###
           theme(panel.background = element_rect(fill = NA),
-                axis.text = element_text(color = "gray50"),
-                axis.text.x = element_text(angle = 90, hjust = 1.0, vjust = 0.5),
+                axis.text = element_text(color = "gray50"), ###
+                axis.text.x = element_text(angle = 90, hjust = 1.0, vjust = 0.5), ###
                 axis.ticks = element_blank(),
                 axis.title = element_blank(),
-                panel.grid.major = element_line(color = "gray95"),
+                panel.grid.major = element_line(color = "gray95"), ###
                 legend.position = "none") +
           NULL
       }
@@ -421,6 +430,31 @@ render_maze <-
   plot_out
 
 }
+
+maze_plot_square <- function(plotdata_walls, plotdata_points, plotdata_solution){
+  plotdata_walls %>%
+    ggplot(aes(x = x, y = y)) +
+    geom_path(aes(group = id), lineend = "round", size = 0) +
+    geom_path(data = plotdata_solution, aes(color = id), size = 1, lineend = "round", linejoin = "round") +
+    scale_color_gradient(low = "limegreen", high = "purple4") +
+    geom_point(data = plotdata_points, aes(shape = d), color = "black") +
+    scale_shape_manual(values = c("u" = 2, "d" = 6, "none" = 16)) +
+    scale_x_continuous(breaks = 1:l_maze) +
+    scale_y_continuous(breaks = 1:w_maze) +
+    coord_equal() +
+    theme(panel.background = element_rect(fill = NA),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title = element_blank(),
+          legend.position = "none",
+          plot.margin = unit( c(0,0,0,0), "in" ),
+          axis.ticks.length = unit(0, "cm"))
+}
+
+maze_plot_3d <- function(){
+  
+}
+
 
 #' Export text coordinates of Maze object walls
 #'
