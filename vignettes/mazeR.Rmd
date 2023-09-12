@@ -24,46 +24,46 @@ The mazeR package is based on the [randomized depth-first search](https://en.wik
 
 A Maze object can be created by calling the `generate_maze` function. The Maze can then be displayed using the `render_maze` function.  
 
-```{r}
+```{r fig.width=5, fig.height=5}
 maze_a <- generate_maze(25, 25)
 render_maze(maze_a)
 ```
 
 The option to display the maze solution can be enabled using the `show_solution` argument of `render_maze`.
 
-```{r}
+```{r fig.width=5, fig.height=5}
 render_maze(maze_a, show_solution = TRUE)
 ```
 
 The default start and exit locations of the maze are the lower left and upper right coordinates, respectively. The exit can be manually specified using the `exit` argument.
 
-```{r}
-maze_b <- generate_maze(25, 25, exit = c(12, 20, 1))
+```{r fig.width=5, fig.height=5}
+maze_b <- generate_maze(25, 25, exit = c(12, 20))
 render_maze(maze_b)
 ```
 
 Some arguments have the ability to influence the randomness of the search algorithm. The `i_weight`, `j_weight`, and `k_weight` arguments modify the probabilities to favor vertical, horizontal, or normal path searches, respectively. For example, setting `i_weight = 2` favors vertical movement 2x more that usual.
 
-```{r}
+```{r fig.width=5, fig.height=5}
 maze_c <- generate_maze(25, 25, i_weight = 2)
 render_maze(maze_c)
 ```
 
 Setting `i_weight = 10` exaggerates this effect even more.
 
-```{r}
+```{r fig.width=5, fig.height=5}
 maze_d <- generate_maze(25, 25, i_weight = 10)
 render_maze(maze_d)
 ```
 
 The `j_weight` argument influences the tendency for more horizontal corridors. 
 
-```{r}
+```{r fig.width=5, fig.height=5}
 maze_e <- generate_maze(25, 25, j_weight = 5)
 render_maze(maze_e)
 ```
 
-The `curl*` arguments can also be used to influence the path through the space. `curl` represents an angle between the path parallel to the most recent direction of travel and a vector of length `curl_weight`, indicating the direction and magnitude of the curl effect. The parallel components of this vector are then added to each "potential next direction" vector, resulting in revised movement probabilities. Positive curl corresponds to a tendency toward clockwise rotation.
+The `curl*` arguments can also be used to influence the path through the space. `curl` represents an angle in radians between the path parallel to the most recent direction of travel and an influence vector of length `curl_weight`, indicating the direction and magnitude of the curl effect. The components of this vector are then projected onto each "potential next direction" vector and summed, resulting in revised movement probabilities. Positive curl corresponds to a tendency toward clockwise rotation.
 
 ```{r echo=FALSE}
 
@@ -104,12 +104,12 @@ p +
 
 curl2 <- 
 p +
-  geom_segment(aes(x = 0, y = 0, xend = sin(pi / 2 * curl_ex), yend = cos(pi / 2 * curl_ex)), lwd = 1, 
+  geom_segment(aes(x = 0, y = 0, xend = sin(pi * curl_ex), yend = cos(pi * curl_ex)), lwd = 1, 
                arrow = arrow(length = unit(0.3, "cm"), type = "closed"), lineend = "round", linejoin = "mitre") +
   # geom_segment(aes(x = 0, y = 0, xend = 0, yend = 1), lty = 2, color = "gray60") +
-  annotate("text", x = 0.1 * sin(pi / 2 * curl_ex) + 0.1, y = 0.1 * cos(pi / 2 * curl_ex), angle = 90 - 27, label = "curl_weight", size = 3, hjust = 0, vjust = 0.5) +
-  geom_curve(aes(x = 0, y = 0.3, xend = 0.3 * sin(pi / 2 * curl_ex), yend = 0.3 * cos(pi / 2 * curl_ex)), curvature = -0.3) +
-  annotate("text", x = -0.05, y = 0.4, label = "\u03C0/2*curl", size = 3, hjust = 1, vjust = 0.5) +
+  annotate("text", x = 0.1 * sin(pi * curl_ex) + 0.1, y = 0.1 * cos(pi * curl_ex) + 0.3, angle = 90 - 50, label = "curl_weight", size = 3, hjust = 0, vjust = 0.5) +
+  geom_curve(aes(x = 0, y = 0.3, xend = 0.3 * sin(pi * curl_ex), yend = 0.3 * cos(pi * curl_ex)), curvature = -0.3) +
+  annotate("text", x = -0.05, y = 0.4, label = "\u03C0*curl", size = 3, hjust = 1, vjust = 0.5) +
   geom_segment(aes(x = 0, y = 0, xend = 1, yend = 0), lwd = 1, 
                arrow = arrow(length = unit(0.3, "cm"), type = "closed"), lineend = "round", linejoin = "mitre", color = "gray60") +
   geom_segment(aes(x = 0, y = 0, xend = -1, yend = 0), lwd = 1, 
@@ -128,13 +128,13 @@ p +
                arrow = arrow(length = unit(0.3, "cm"), type = "closed"), lineend = "round", linejoin = "mitre") +
   geom_segment(aes(x = 0, y = 0, xend = 0, yend = 1), lwd = 1, color = "gray60", 
                arrow = arrow(length = unit(0.3, "cm"), type = "closed"), lineend = "round", linejoin = "mitre") +
-  geom_segment(aes(x = 0, y = 0, xend = sin(pi / 2 * curl_ex), yend = cos(pi / 2 * curl_ex)), lwd = 1, color = "gray60", 
+  geom_segment(aes(x = 0, y = 0, xend = sin(pi * curl_ex), yend = cos(pi * curl_ex)), lwd = 1, color = "gray60", 
                arrow = arrow(length = unit(0.3, "cm"), type = "closed"), lineend = "round", linejoin = "mitre") +
-  geom_segment(aes(x = 0, y = 0, xend = 1 + sin(pi / 2 * curl_ex), yend = 0), lwd = 1, color = "purple", 
+  geom_segment(aes(x = 0, y = 0, xend = 1 + sin(pi * curl_ex), yend = 0), lwd = 1, color = "purple", 
                arrow = arrow(length = unit(0.3, "cm"), type = "closed"), lineend = "round", linejoin = "mitre") +
-  geom_segment(aes(x = 0, y = 0, xend = -1 + sin(pi / 2 * curl_ex), yend = 0), lwd = 1, color = "purple", 
+  geom_segment(aes(x = 0, y = 0, xend = -1 + sin(pi * curl_ex), yend = 0), lwd = 1, color = "purple", 
                arrow = arrow(length = unit(0.3, "cm"), type = "closed"), lineend = "round", linejoin = "mitre") +
-  geom_segment(aes(x = 0, y = 0, xend = 0, yend = 1 + cos(pi / 2 * curl_ex)), lwd = 1, color = "purple", 
+  geom_segment(aes(x = 0, y = 0, xend = 0, yend = 1 + cos(pi * curl_ex)), lwd = 1, color = "purple", 
                arrow = arrow(length = unit(0.3, "cm"), type = "closed"), lineend = "round", linejoin = "mitre") +
   
   geom_point(aes(x = 0, y = 0), size = 5) +
@@ -143,36 +143,86 @@ p +
 
 ```
 
-```{r fig.width=8, fig.height=3, echo=FALSE}
+```{r fig.width=7, fig.height=3, echo=FALSE}
 
 gridExtra::grid.arrange(curl1, curl2, curl3, nrow = 1)
 
 ```
 
 
-```{r}
-maze_f <- generate_maze(25, 25, curl = 0.3, curl_prob = 1.0, curl_weight = 2, exit = c(12, 12, 1))
+```{r fig.width=5, fig.height=5}
+maze_f <- generate_maze(25, 25, curl = 0.3, curl_weight = 1, exit = c(12, 16))
 render_maze(maze_f)
 ```
 
 The curl effect is easier to see when the solution is shown.
 
-```{r}
+```{r fig.width=5, fig.height=5}
 render_maze(maze_f, show_solution = TRUE)
 ```
 
 `curl = 0` increases the tendency to continue in straight lines.
 
+```{r fig.width=5, fig.height=5}
+maze_g <- generate_maze(25, 25, curl = 0, curl_weight = 7)
+render_maze(maze_g, show_solution = TRUE)
+```
+The `uncurl` argument negates the curl angle each time the search algorithm is forced to backtrack. This should result in a solution which oscillates back and forth.
+
+```{r fig.width=5, fig.height=5}
+
+maze_h <- generate_maze(25, 25, curl = 0.2, curl_weight = 1, uncurl = TRUE)
+render_maze(maze_h, show_solution = TRUE)
+
+```
+
+The `mask_dir` argument lets you load a .bmp mask file which prevents corridors from crossing at specific points. Each pixel in the mask represents a cell in the maze. Black lines in the mask image cannot be crossed. Consider this arbitrary mask...
+
 ```{r}
-maze_g <- generate_maze(25, 25, curl = 0, curl_prob = 1.0, curl_weight = 10, exit = c(12, 12, 1))
-render_maze(maze_g)
+
+knitr::include_graphics(system.file("mask_example1.bmp", package="mazeR"))
+
+```
+
+...and a maze produced by it. Notice how the mask boundaries are preserved in the final maze.
+
+```{r fig.width=5, fig.height=5}
+
+maze_i <- generate_maze(mask_dir = system.file("mask_example1.bmp", package="mazeR"))
+render_maze(maze_i, show_solution = T)
+
+```
+
+Masks must not completely isolate one region of the space from another. That is to say, closed loops are not allowed, including 2x2 clusters of pixels. Following this rule, any simple image can be used as a mask, including another maze!
+
+```{r}
+knitr::include_graphics(system.file("mask_example2.bmp", package="mazeR"))
 ```
 
 
-```{r}
+```{r fig.width=5, fig.height=5, fig.cap="metamaze"}
 
-maze_h <- generate_maze(25, 25, curl = 1, curl_prob = 0.1, curl_weight = 10, uncurl = TRUE)
-render_maze(maze_h, show_solution = TRUE)
+maze_j <- generate_maze(mask_dir = system.file("mask_example2.bmp", package="mazeR"))
+render_maze(maze_j)
+
+```
+
+
+Mazes do not need to be limited to 2-dimensions. The argument `h_maze` specifies the height or number of 2D layers to include. Transitions between layers are indicated by up- or down-pointing triangles. Coordinates are repeated on each facet for easier reference between layers. Choosing a height which is a square number tends to produce visually appealing layouts.
+
+```{r fig.width=5, fig.height=5}
+
+maze_k <- generate_maze(10, 10, h_maze = 4)
+render_maze(maze_k, show_solution = TRUE)
+
+```
+
+Mazes based on a triangular tileset are also possible. 
+
+```{r fig.width=5, fig.height=5}
+
+maze_l <- generate_maze_tri(40, 80)
+render_maze_tri(maze_l)
 
 ```
 
